@@ -1,1 +1,16 @@
+# Maven
 target/
+
+# Mac
+.DS_Store
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+
