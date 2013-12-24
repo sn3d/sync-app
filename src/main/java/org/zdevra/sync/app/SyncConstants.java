@@ -20,7 +20,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Provide you global access to constants in 'app.properties'
+ * Provide you a global access to constants in 'app.properties'
+ *
  * @author Zdenko Vrabel (vrabel.zdenko@gmail.com)
  */
 public class SyncConstants {
@@ -31,7 +32,6 @@ public class SyncConstants {
 
 	/** singletone properties of 'app.properties' */
 	private static Properties properties;
-
 
 	/**
 	 * inner method do lazy loading of properties
@@ -47,19 +47,4 @@ public class SyncConstants {
 		}
 		return properties;
 	}
-
-	/*
-	public static String getApplicationName() {
-		return (String)getProperties().get("application");
-	}
-
-	public static String getVersion() {
-		return (String)getProperties().get("version");
-	}
-
-	public static String getHomePage() {
-		return (String)getProperties().get("homepage");
-	}*/
-
-
 }
