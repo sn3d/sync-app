@@ -30,6 +30,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,6 +51,7 @@ public class SyncApp implements ActionListener {
 	private MenuItem syncItem;
 
 	private ExecutorService executor = Executors.newFixedThreadPool(1);
+	private DecimalFormat format = new DecimalFormat("#.#");
 
 
 	public static void main(String[] args) {
@@ -192,7 +194,8 @@ public class SyncApp implements ActionListener {
 		log.info("start sync.");
 
 		syncItem.setEnabled(false);
-		syncItem.setLabel("Synchronizing...");
+		syncItem.setLabel("Synchronizing ");
+
 		executor.submit(new Callable<Object>() {
 			@Override
 			public Object call() throws Exception {
@@ -202,6 +205,12 @@ public class SyncApp implements ActionListener {
 
 					//do sync
 					Sync sync = Sync.createForFilesystem(getConfiguration().getPrimaryDir(), getConfiguration().getSecondaryDir());
+					sync.addEventListener(new SyncProgressBar() {
+						@Override
+						protected void processing(double percentage) {
+							syncItem.setLabel("Synchronizing (" + format.format(percentage) + "%)");
+						}
+					});
 					sync.sync();
 
 				} catch (Throwable e) {
@@ -227,5 +236,4 @@ public class SyncApp implements ActionListener {
 		log.info("end");
 		System.exit(0);
 	}
-
 }

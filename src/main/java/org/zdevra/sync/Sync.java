@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -45,6 +46,9 @@ public class Sync {
 
 	/** determines sync mode. */
 	private SyncMode mode;
+
+	/** list of all registered event listeners */
+	private List<SyncEventListener> syncEventListeners = new LinkedList<SyncEventListener>();
 
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -75,6 +79,10 @@ public class Sync {
 	// methods
 	//------------------------------------------------------------------------------------------------------------------
 
+	public void addEventListener(SyncEventListener listener) {
+		this.syncEventListeners.add(listener);
+	}
+
 
 	public void setSyncMode(SyncMode mode) {
 		this.mode = mode;
@@ -84,18 +92,29 @@ public class Sync {
 	 * do synchronization
 	 */
 	public void sync() {
-		//scan
-		primaryFiles = primaryRepo.scan();
-		secondaryFiles = secondaryRepo.scan();
-
-		//go through files and merge them
+		scan();
 		merge();
 	}
 
 
+	private void scan() {
+		primaryFiles = primaryRepo.scan();
+		secondaryFiles = secondaryRepo.scan();
+
+		//invoke start event
+		if (mode == SyncMode.ONE_DIRECTIONAL) {
+			invokeEvent(new SyncEvent.StartEvent(primaryFiles.size()));
+		} else {
+			long count = primaryFiles.size() > secondaryFiles.size() ? primaryFiles.size() : secondaryFiles.size();
+			invokeEvent(new SyncEvent.StartEvent(count));
+		}
+
+	}
+
 	private void merge() {
 		// go through primary files and merge them with secondary
 		for (ISyncFile a : primaryFiles) {
+			invokeEvent(new SyncEvent.ProcessFileEvent(a));
 			ISyncFile b = getAndRemoveFile(a, secondaryFiles);
 			if (b != null) {
 				merge(a, b);
@@ -107,6 +126,7 @@ public class Sync {
 		//copy rest of missing files from secondary to primary
 		if (mode == SyncMode.BI_DIRECTIONAL) {
 			for (ISyncFile b : secondaryFiles) {
+				invokeEvent(new SyncEvent.ProcessFileEvent(b));
 				copy(b, primaryRepo);
 			}
 		}
@@ -131,6 +151,8 @@ public class Sync {
 	private void copy(ISyncFile source, ISyncRepository destinationRepo) {
 		OutputStream os = null;
 		try {
+			invokeEvent(new SyncEvent.CopyEvent(source, destinationRepo));
+
 			//copy
 			os = destinationRepo.openStream(source.path());
 			source.copyTo(os);
@@ -149,6 +171,13 @@ public class Sync {
 					throw new SyncError("Error closing the stream when copy " + source.path(), e);
 				}
 			}
+		}
+	}
+
+
+	private void invokeEvent(SyncEvent e) {
+		for (SyncEventListener listener : syncEventListeners) {
+			listener.listen(e);
 		}
 	}
 
