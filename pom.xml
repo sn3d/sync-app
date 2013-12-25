@@ -7,10 +7,15 @@
 	<groupId>org.zdevra</groupId>
 	<artifactId>sync-app</artifactId>
 	<name>Sync App</name>
-	<version>1.0-alpha-1</version>
+	<version>1.0-alpha-2</version>
 	<url>https://github.com/sn3d/sync-app</url>
 
 	<dependencies>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+		</dependency>
 		<dependency>
 			<groupId>org.testng</groupId>
 			<artifactId>testng</artifactId>

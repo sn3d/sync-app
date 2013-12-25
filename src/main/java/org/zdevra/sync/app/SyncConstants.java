@@ -16,11 +16,14 @@
  *****************************************************************************/
 package org.zdevra.sync.app;
 
+import org.zdevra.sync.SyncError;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Provide you a global access to constants in 'app.properties'
+ * Provide you a global access to constants
  *
  * @author Zdenko Vrabel (vrabel.zdenko@gmail.com)
  */
@@ -30,8 +33,20 @@ public class SyncConstants {
 	public static final String VERSION = (String)getProperties().get("version");
 	public static final String HOMEPAGE = (String)getProperties().get("homepage");
 
+	public static final File PREFERENCES_FILE = getPreferencesFile();
+	public static final File LOG_FILE = getLogFile();
+	public static final OperationSystem OS = getOs();
+
 	/** singletone properties of 'app.properties' */
 	private static Properties properties;
+
+	/**
+	 * Enumeration for supported OS
+	 */
+	public static enum OperationSystem {
+		MAC, LINUX, WINDOWS
+	}
+
 
 	/**
 	 * inner method do lazy loading of properties
@@ -46,5 +61,50 @@ public class SyncConstants {
 			}
 		}
 		return properties;
+	}
+
+
+	/**
+	 * inner method detectd the OS
+	 */
+	private static OperationSystem getOs() {
+		String os = System.getProperty("os.name");
+		if (os != null) {
+			os = os.toLowerCase();
+			if ( os.contains("mac") || os.contains("darwin") ) {
+				return OperationSystem.MAC;
+			} else if (os.contains("win")) {
+				return OperationSystem.WINDOWS;
+			}
+		}
+		throw new SyncError("Unsupported OS:" + os);
+	}
+
+
+	/**
+	 * inner method returns preferences file based on OS you're running
+	 */
+	private static File getPreferencesFile() {
+		File home = new File(System.getProperty("user.home"));
+		switch (getOs()) {
+			case MAC:
+				return new File(home, "/Library/Preferences/Sync/sync.properties");
+			default:
+				return null;
+		}
+	}
+
+
+	/**
+	 * inner method returns log file based on OS you're running
+	 */
+	private static File getLogFile() {
+		File home = new File(System.getProperty("user.home"));
+		switch (getOs()) {
+			case MAC:
+				return new File(home, "/Library/Logs/SyncApp/sync.log");
+			default:
+				return null;
+		}
 	}
 }

@@ -16,6 +16,10 @@
  *****************************************************************************/
 package org.zdevra.sync.app;
 
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.zdevra.sync.Sync;
 import org.zdevra.sync.SyncError;
 
@@ -35,6 +39,8 @@ import java.util.concurrent.Executors;
  */
 public class SyncApp implements ActionListener {
 
+	static Logger log = Logger.getLogger(SyncApp.class);
+
 	private static SyncPreferences configuration;
 
 	private MenuItem preferencesItem;
@@ -47,9 +53,21 @@ public class SyncApp implements ActionListener {
 
 
 	public static void main(String[] args) {
+
+		//init log4j
+		FileAppender fa = new FileAppender();
+		fa.setName("FileLogger");
+		fa.setFile(SyncConstants.LOG_FILE.getAbsolutePath());
+		fa.setLayout(new PatternLayout("%d %-5p [%c{1}] %m%n"));
+		fa.setThreshold(Level.DEBUG);
+		fa.setAppend(true);
+		fa.activateOptions();
+		Logger.getRootLogger().addAppender(fa);
+
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
+			log.error("Error in initalization", e);
 			throw new SyncError("Error in initialization", e);
 		}
 
@@ -72,6 +90,8 @@ public class SyncApp implements ActionListener {
 
 	private void createAndShowGUI() {
 		try {
+			log.info("start app");
+
 			//initialize Tray with Icon
 			if (!SystemTray.isSupported()) {
 				throw new SyncError("SystemTray is not supported.");
@@ -122,10 +142,10 @@ public class SyncApp implements ActionListener {
 				onClickPreferences();
 			}
 
-		} catch (AWTException e) {
-			throw new SyncError("Error in AWT", e);
-		} catch (IOException e) {
-			throw new SyncError("IO error ", e);
+		} catch (Exception e) {
+			log.error("Error:" + e.getMessage(), e);
+			JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			throw new SyncError("Error", e);
 		}
 	}
 
@@ -145,9 +165,11 @@ public class SyncApp implements ActionListener {
 		}
 	}
 
+
 	private void onClickAbout() {
-		JOptionPane.showMessageDialog(null, SyncConstants.APPNAME + " version " + SyncConstants.VERSION);
+		JOptionPane.showMessageDialog(null, SyncConstants.APPNAME + " version " + SyncConstants.VERSION, "About", JOptionPane.PLAIN_MESSAGE);
 	}
+
 
 	private void onClickHelp() {
 		Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
@@ -155,35 +177,54 @@ public class SyncApp implements ActionListener {
 			try {
 				desktop.browse(URI.create(SyncConstants.HOMEPAGE));
 			} catch (IOException e) {
-				throw new SyncError("IO error", e);
+				log.error("IO Error:" + e.getMessage(), e);
 			}
 		}
 	}
+
 
 	private void onClickPreferences() {
 		PreferencesDialog dialog = new PreferencesDialog();
 	}
 
+
 	private void onSyncStart() {
+		log.info("start sync.");
+
 		syncItem.setEnabled(false);
 		syncItem.setLabel("Synchronizing...");
 		executor.submit(new Callable<Object>() {
 			@Override
 			public Object call() throws Exception {
-				Sync sync = Sync.createForFilesystem(getConfiguration().getPrimaryDir(), getConfiguration().getSecondaryDir());
-				sync.sync();
+				try {
+					//check the configuration whether is valid
+					getConfiguration().validate();
+
+					//do sync
+					Sync sync = Sync.createForFilesystem(getConfiguration().getPrimaryDir(), getConfiguration().getSecondaryDir());
+					sync.sync();
+
+				} catch (Throwable e) {
+					log.error("Sync error:" + e.getMessage(), e);
+					JOptionPane.showMessageDialog(null, e, "Error", JOptionPane.ERROR_MESSAGE);
+				}
+
 				onSyncEnd();
 				return null;
 			}
 		});
 	}
 
+
 	protected void onSyncEnd() {
+		log.info("end sync.");
 		syncItem.setLabel("Synchronize");
 		syncItem.setEnabled(true);
 	}
 
+
 	private void onClose() {
+		log.info("end");
 		System.exit(0);
 	}
 

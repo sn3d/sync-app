@@ -16,7 +16,7 @@
  *****************************************************************************/
 package org.zdevra.sync.app;
 
-import org.zdevra.sync.SyncError;
+import org.apache.log4j.Logger;
 import org.zdevra.sync.SyncMode;
 
 import javax.swing.*;
@@ -25,7 +25,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Preferences dialog class
@@ -37,6 +36,9 @@ public class PreferencesDialog extends JFrame {
 	//------------------------------------------------------------------------------------------------------------------
 	// members
 	//------------------------------------------------------------------------------------------------------------------
+
+	/** log instance*/
+	static Logger log = Logger.getLogger(PreferencesDialog.class);
 
 	/** primary directory input field */
 	private JTextField primaryField;
@@ -64,107 +66,113 @@ public class PreferencesDialog extends JFrame {
 	 * GUI Initialization method
 	 */
 	private void initalize() {
-		setSize(400, 220);
-		setLocationRelativeTo(null);
-		setResizable(false);
-		setAlwaysOnTop(true);
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		try {
+			setSize(400, 220);
+			setLocationRelativeTo(null);
+			setResizable(false);
+			setAlwaysOnTop(true);
+			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-		//primary dir choose btn & label
-		JPanel primaryPanel = new JPanel();
-		primaryPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Primary"));
-		primaryPanel.setLayout(new FlowLayout());
+			//primary dir choose btn & label
+			JPanel primaryPanel = new JPanel();
+			primaryPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Primary"));
+			primaryPanel.setLayout(new FlowLayout());
 
-		primaryField = new JTextField("", 20);
-		primaryField.setText(SyncApp.getConfiguration().getPrimaryDirAsString());
-		primaryPanel.add(primaryField);
+			primaryField = new JTextField("", 20);
+			primaryField.setText(SyncApp.getConfiguration().getPrimaryDirAsString());
+			primaryPanel.add(primaryField);
 
-		JButton selectPrimaryBtn = new JButton("...");
-		selectPrimaryBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				onClickPrimaryDir();
+			JButton selectPrimaryBtn = new JButton("...");
+			selectPrimaryBtn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					onClickPrimaryDir();
+				}
+			});
+			primaryPanel.add(selectPrimaryBtn);
+
+			//secondary dir choose btn & label
+			JPanel secondaryPanel = new JPanel();
+			secondaryPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Secondary"));
+			secondaryPanel.setLayout(new FlowLayout());
+
+			secondaryField = new JTextField("", 20);
+			secondaryField.setText(SyncApp.getConfiguration().getSecondaryDirAsString());
+			secondaryPanel.add(secondaryField);
+
+			JButton selectSecondaryBtn = new JButton("...");
+			selectSecondaryBtn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					onClickSecondaryDir();
+				}
+			});
+			secondaryPanel.add(selectSecondaryBtn);
+
+			//sync mode
+			JRadioButton syncOneDirectionalRadioBtn = new JRadioButton("one directional");
+			syncOneDirectionalRadioBtn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					onClickSyncMode(SyncMode.ONE_DIRECTIONAL);
+				}
+			});
+
+			JRadioButton syncBiDirectionalRadioBtn = new JRadioButton("bi directional");
+			syncBiDirectionalRadioBtn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					onClickSyncMode(SyncMode.BI_DIRECTIONAL);
+				}
+			});
+
+			this.syncMode = SyncApp.getConfiguration().getSyncMode();
+			switch (this.syncMode) {
+				case ONE_DIRECTIONAL:
+					syncOneDirectionalRadioBtn.setSelected(true);
+					break;
+				case BI_DIRECTIONAL:
+					syncBiDirectionalRadioBtn.setSelected(true);
+					break;
 			}
-		});
-		primaryPanel.add(selectPrimaryBtn);
 
-		//secondary dir choose btn & label
-		JPanel secondaryPanel = new JPanel();
-		secondaryPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Secondary"));
-		secondaryPanel.setLayout(new FlowLayout());
+			ButtonGroup syncModeGroup = new ButtonGroup();
+			syncModeGroup.add(syncOneDirectionalRadioBtn);
+			syncModeGroup.add(syncBiDirectionalRadioBtn);
 
-		secondaryField = new JTextField("", 20);
-		secondaryField.setText(SyncApp.getConfiguration().getSecondaryDirAsString());
-		secondaryPanel.add(secondaryField);
+			JPanel syncModePanel = new JPanel();
+			syncModePanel.setLayout(new FlowLayout());
+			syncModePanel.add(syncOneDirectionalRadioBtn);
+			syncModePanel.add(syncBiDirectionalRadioBtn);
 
-		JButton selectSecondaryBtn = new JButton("...");
-		selectSecondaryBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				onClickSecondaryDir();
-			}
-		});
-		secondaryPanel.add(selectSecondaryBtn);
 
-		//sync mode
-		JRadioButton syncOneDirectionalRadioBtn = new JRadioButton("one directional");
-		syncOneDirectionalRadioBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				onClickSyncMode(SyncMode.ONE_DIRECTIONAL);
-			}
-		});
+			// close button
+			JButton closeBtn = new JButton("Apply");
+			closeBtn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					onApply();
+				}
+			});
+			closeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		JRadioButton syncBiDirectionalRadioBtn = new JRadioButton("bi directional");
-		syncBiDirectionalRadioBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				onClickSyncMode(SyncMode.BI_DIRECTIONAL);
-			}
-		});
+			// main panel
+			JPanel panel = new JPanel();
+			panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+			panel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		this.syncMode = SyncApp.getConfiguration().getSyncMode();
-		switch (this.syncMode) {
-			case ONE_DIRECTIONAL:
-				syncOneDirectionalRadioBtn.setSelected(true);
-				break;
-			case BI_DIRECTIONAL:
-				syncBiDirectionalRadioBtn.setSelected(true);
-				break;
+			panel.add(syncModePanel);
+			panel.add(primaryPanel);
+			panel.add(secondaryPanel);
+			panel.add(closeBtn);
+
+			add(panel);
+			setVisible(true);
+
+		} catch (Throwable e) {
+			log.error(e);
+			JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
-
-		ButtonGroup syncModeGroup = new ButtonGroup();
-		syncModeGroup.add(syncOneDirectionalRadioBtn);
-		syncModeGroup.add(syncBiDirectionalRadioBtn);
-
-		JPanel syncModePanel = new JPanel();
-		syncModePanel.setLayout(new FlowLayout());
-		syncModePanel.add(syncOneDirectionalRadioBtn);
-		syncModePanel.add(syncBiDirectionalRadioBtn);
-
-
-		// close button
-		JButton closeBtn = new JButton("Apply");
-		closeBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				onApply();
-			}
-		});
-		closeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		// main panel
-		JPanel panel = new JPanel();
-		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		panel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		panel.add(syncModePanel);
-		panel.add(primaryPanel);
-		panel.add(secondaryPanel);
-		panel.add(closeBtn);
-
-		add(panel);
-		setVisible(true);
 	}
 
 
@@ -216,11 +224,14 @@ public class PreferencesDialog extends JFrame {
 			SyncApp.getConfiguration().setSecondaryDir(secondaryDir);
 
 			SyncApp.getConfiguration().setSyncMode(this.syncMode);
+
+			SyncApp.getConfiguration().validate();
 			SyncApp.getConfiguration().save();
 
 			this.dispose();
-		} catch (IOException e) {
-			throw new SyncError("IO error", e);
+		} catch (Throwable e) {
+			log.error(e);
+			JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

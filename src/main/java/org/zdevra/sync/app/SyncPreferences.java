@@ -16,6 +16,8 @@
  *****************************************************************************/
 package org.zdevra.sync.app;
 
+import org.apache.log4j.Logger;
+import org.zdevra.sync.SyncError;
 import org.zdevra.sync.SyncMode;
 
 import java.io.*;
@@ -25,6 +27,8 @@ import java.util.Properties;
  * @author Zdenko Vrabel (vrabel.zdenko@gmail.com)
  */
 public class SyncPreferences {
+
+	static Logger log = Logger.getLogger(SyncPreferences.class);
 
 	private File primaryDir;
 	private File secondaryDir;
@@ -68,14 +72,33 @@ public class SyncPreferences {
 		this.syncMode = syncMode;
 	}
 
+	public void validate() {
+		if (!primaryDir.exists() || !primaryDir.isDirectory()) {
+			throw new SyncError("the directory:" + primaryDir.getAbsoluteFile() + " is not ready");
+		}
+
+		if (!secondaryDir.exists() || !secondaryDir.isDirectory()) {
+			throw new SyncError("the directory:" + secondaryDir.getAbsoluteFile() + " is not ready");
+		}
+
+		if (syncMode == null) {
+			throw new SyncError("there is no sync mode specified");
+		}
+	}
+
 	public boolean load() throws IOException {
-		File preferencesFile = getPreferencesFile();
+		File preferencesFile = SyncConstants.PREFERENCES_FILE;
 		if (!preferencesFile.exists()) {
+			log.warn("Missing configuration. Do a first initialization configuration.");
 			return false;
 		}
 
 		Properties properties = new Properties();
 		properties.load(new FileInputStream(preferencesFile));
+
+		if (log.isDebugEnabled())
+			log.debug("properties " + properties.toString());
+
 		primaryDir = new File((String)properties.get("primary.dir"));
 		secondaryDir = new File((String)properties.get("secondary.dir"));
 		syncMode = SyncMode.from((String) properties.get("syncmode"));
@@ -90,7 +113,7 @@ public class SyncPreferences {
 		properties.put("secondary.dir", secondaryDir.getAbsolutePath());
 		properties.put("syncmode", syncMode.toString());
 
-		File preferencesFile = getPreferencesFile();
+		File preferencesFile = SyncConstants.PREFERENCES_FILE;
 		if (!preferencesFile.getParentFile().exists()) {
 			preferencesFile.getParentFile().mkdirs();
 		}
@@ -101,21 +124,4 @@ public class SyncPreferences {
 		properties.store(new FileOutputStream(preferencesFile), "");
 	}
 
-
-	protected File getPreferencesFile() {
-		File home = new File(System.getProperty("user.home"));
-		String os = System.getProperty("os.name");
-		os = os.toLowerCase();
-
-		if (os != null) {
-			if ( os.contains("mac") || os.contains("darwin") ) {
-				return new File(home, "/Library/Preferences/Sync/sync.properties");
-			} else if (os.contains("win")) {
-				//TODO: path to windows properties
-			} else {
-
-			}
-		}
-		return null;
-	}
 }
