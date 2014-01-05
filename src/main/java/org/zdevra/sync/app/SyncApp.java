@@ -173,7 +173,7 @@ public class SyncApp implements ActionListener {
 
 
 	private void onClickAbout() {
-		JOptionPane.showMessageDialog(null, SyncConstants.APPNAME + " version " + SyncConstants.VERSION + " (JVM " + System.getProperty("java.version") + " home=" + System.getProperty("java.home") + ")", "About", JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showMessageDialog(null, SyncConstants.APPNAME + " version " + SyncConstants.VERSION, "About", JOptionPane.PLAIN_MESSAGE);
 	}
 
 
