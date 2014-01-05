@@ -66,6 +66,10 @@ public class SyncApp implements ActionListener {
 		fa.activateOptions();
 		Logger.getRootLogger().addAppender(fa);
 
+		//check JAVA version
+		log.info("java.version=" + System.getProperty("java.version"));
+		log.info("java.home=" + System.getProperty("java.home"));
+
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
@@ -169,7 +173,7 @@ public class SyncApp implements ActionListener {
 
 
 	private void onClickAbout() {
-		JOptionPane.showMessageDialog(null, SyncConstants.APPNAME + " version " + SyncConstants.VERSION, "About", JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showMessageDialog(null, SyncConstants.APPNAME + " version " + SyncConstants.VERSION + " (JVM " + System.getProperty("java.version") + " home=" + System.getProperty("java.home") + ")", "About", JOptionPane.PLAIN_MESSAGE);
 	}
 
 

@@ -19,12 +19,9 @@ package org.zdevra.sync.filesystem;
 import org.zdevra.sync.ISyncFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileTime;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Zdenko Vrabel (vrabel.zdenko@gmail.com)
@@ -35,9 +32,9 @@ class FilesystemFile implements ISyncFile {
 	// members
 	//------------------------------------------------------------------------------------------------------------------
 
-	private final Path root;
-	private final Path path;
-	private final Path subpath;
+	private final File root;
+	private final File path;
+	private final String subpath;
 
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -48,10 +45,10 @@ class FilesystemFile implements ISyncFile {
 	 * extract the path from root and source
 	 */
 	static ISyncFile create(File root, File source) {
-		int rootCount = root.toPath().getNameCount();
-		int sourceCount = source.toPath().getNameCount();
-		Path subpath = source.toPath().subpath(rootCount, sourceCount);
-		return new FilesystemFile(root.toPath(), source.toPath(), subpath);
+		String pathStr = source.getAbsolutePath();
+		String rootStr = root.getAbsolutePath();
+		String subpath = pathStr.substring(rootStr.length());
+		return new FilesystemFile(root, source, subpath);
 	}
 
 	/**
@@ -61,7 +58,7 @@ class FilesystemFile implements ISyncFile {
 	 * @param path
 	 * @param subpath
 	 */
-	private FilesystemFile(Path root, Path path, Path subpath) {
+	private FilesystemFile(File root, File path, String subpath) {
 		this.root = root;
 		this.path = path;
 		this.subpath = subpath;
@@ -70,27 +67,35 @@ class FilesystemFile implements ISyncFile {
 
 	@Override
 	public String path() {
-		return this.subpath.toString();
+		return this.subpath;
 	}
 
 
 	@Override
 	public long timestamp() throws IOException {
-		FileTime time = Files.getLastModifiedTime(path);
-		return time.toMillis();
+		return path.lastModified();
 	}
 
 
 	@Override
 	public void touch(long timestamp) throws IOException {
-		FileTime time = FileTime.from(timestamp, TimeUnit.MILLISECONDS);
-		Files.setLastModifiedTime(path, time);
+		path.setLastModified(timestamp);
 	}
 
 
 	@Override
-	public void copyTo(OutputStream os) throws IOException {
-		Files.copy(path, os);
+	public void copyTo(OutputStream destination) throws IOException {
+		FileInputStream source = new FileInputStream(path);
+		try {
+			byte[] buf = new byte[1024];
+			int bytesRead;
+			while ((bytesRead = source.read(buf)) > 0) {
+				destination.write(buf, 0, bytesRead);
+			}
+		} finally {
+			source.close();
+			destination.close();
+		}
 	}
 
 

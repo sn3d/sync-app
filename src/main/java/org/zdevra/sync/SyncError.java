@@ -36,7 +36,4 @@ public class SyncError extends RuntimeException {
 		super(cause);
 	}
 
-	public SyncError(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
 }

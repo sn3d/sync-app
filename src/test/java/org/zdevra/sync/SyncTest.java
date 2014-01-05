@@ -23,8 +23,6 @@ import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.attribute.FileTime;
 
 /**
  * @author Zdenko Vrabel (vrabel.zdenko@gmail.com)
@@ -61,8 +59,8 @@ public class SyncTest {
 		File secondaryTestFile = new File(secondaryDir, SUBTESTFILE);
 		Assert.assertTrue(secondaryTestFile.exists());
 
-		FileTime primaryTimestamp = Files.getLastModifiedTime(primaryTestFile.toPath());
-		FileTime secondaryTimestamp = Files.getLastModifiedTime(secondaryTestFile.toPath());
+		long primaryTimestamp = primaryTestFile.lastModified();
+		long secondaryTimestamp = secondaryTestFile.lastModified();
 		Assert.assertEquals(primaryTimestamp, secondaryTimestamp);
 	}
 
