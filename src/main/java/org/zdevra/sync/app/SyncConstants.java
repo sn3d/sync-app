@@ -89,6 +89,8 @@ public class SyncConstants {
 		switch (getOs()) {
 			case MAC:
 				return new File(home, "/Library/Preferences/Sync/sync.properties");
+			case WINDOWS:
+				return new File(home,"/AppData/Local/SyncApp/sync.properties");
 			default:
 				return null;
 		}
@@ -103,6 +105,8 @@ public class SyncConstants {
 		switch (getOs()) {
 			case MAC:
 				return new File(home, "/Library/Logs/SyncApp/sync.log");
+			case WINDOWS:
+				return new File(home, "/AppData/Local/SyncApp/sync.log");
 			default:
 				return null;
 		}
