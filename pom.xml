@@ -74,6 +74,70 @@
 
 	<profiles>
 		<profile>
+			<id>windows</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<version>2.4</version>
+						<configuration>
+							<archive>
+								<manifest>
+									<mainClass>org.zdevra.sync.app.SyncApp</mainClass>
+								</manifest>
+							</archive>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<finalName>syncapp</finalName>
+						</configuration>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>single</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.bluestemsoftware.open.maven.plugin</groupId>
+						<artifactId>launch4j-plugin</artifactId>
+						<version>1.5.0.0</version>
+						<configuration>
+							<jar>target/syncapp-jar-with-dependencies.jar</jar>
+							<dontWrapJar>false</dontWrapJar>
+							<headerType>gui</headerType>
+							<jre>
+								<minVersion>1.6.0</minVersion>
+								<!--
+								<opts>
+									<opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</opt>
+								</opts>
+								-->
+							</jre>
+							<classPath>
+								<mainClass>org.zdevra.sync.app.SyncApp</mainClass>
+								<addDependencies>true</addDependencies>
+								<jarLocation>lib/</jarLocation>
+								<preCp>anything</preCp>
+							</classPath>
+						</configuration>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>launch4j</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
 			<id>mac</id>
 			<build>
 				<plugins>

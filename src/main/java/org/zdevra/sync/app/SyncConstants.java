@@ -37,7 +37,7 @@ public class SyncConstants {
 	public static final File LOG_FILE = getLogFile();
 	public static final OperationSystem OS = getOs();
 
-	/** singletone properties of 'app.properties' */
+	/** singleton properties of 'app.properties' */
 	private static Properties properties;
 
 	/**
